@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Thème de base compatible avec AppCompat -->
+    <style name="Theme.Application_gestion_RDV" parent="Theme.AppCompat.Light.DarkActionBar">
+        <!-- Couleurs personnalisées -->
+        <item name="colorPrimary">#1976D2</item>
+        <item name="colorPrimaryDark">#0D47A1</item>
+        <item name="colorAccent">#1976D2</item>
+    </style>
+</resources>
