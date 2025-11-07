@@ -11,7 +11,7 @@ class User(Base):
     password = Column(String, nullable=False)
     region = Column(String, nullable=True)
     mutuelle_url = Column(String, nullable=True)
-
+    role  = Column(String, nullable=True)
     appointments = relationship("Appointment", back_populates="user")
     documents = relationship("Document", back_populates="user")
 

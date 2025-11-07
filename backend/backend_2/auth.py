@@ -1,9 +1,8 @@
 # backend/routers/auth.py
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
 from database import get_db
 from models import User
-import crud, schemas
 from pydantic import BaseModel
 import jwt
 from datetime import datetime, timedelta
@@ -16,11 +15,31 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 
+# ===== MODELS =====
 class LoginRequest(BaseModel):
     email: str
     password: str
 
 
+class RegisterRequest(BaseModel):
+    name: str
+    email: str
+    password: str
+    region: str = None  # Optionnel
+
+
+class UserResponse(BaseModel):
+    id: int
+    name: str
+    email: str
+    role: str = None
+    region: str = None
+
+    class Config:
+        from_attributes = True
+
+
+# ===== FONCTION TOKEN =====
 def create_access_token(data: dict, expires_delta: timedelta = None):
     to_encode = data.copy()
     expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
@@ -28,15 +47,23 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 
-# ✅ ENDPOINT LOGIN (compatible Android)
+# ===== ENDPOINT LOGIN =====
 @router.post("/login")
 def login(request: LoginRequest, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.email == request.email).first()
     
-    if not user or request.password != user.password:
+    if not user:
         return {
             "success": False,
-            "message": "Identifiants incorrects",
+            "message": "Email incorrect",
+            "token": None,
+            "user": None
+        }
+
+    if request.password != user.password:
+        return {
+            "success": False,
+            "message": "Mot de passe incorrect",
             "token": None,
             "user": None
         }
@@ -51,25 +78,50 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
             "id": user.id,
             "name": user.name,
             "email": user.email,
-            "role": getattr(user, 'role', None)
+            "role": getattr(user, 'role', None),
+            "region": getattr(user, 'region', None)
         }
     }
 
 
-# ✅ ENDPOINT REGISTER
-@router.post("/register", response_model=schemas.UserResponse)
-def register(user_in: schemas.UserCreate, db: Session = Depends(get_db)):
-    existing = crud.get_user_by_email(db, user_in.email)
-    if existing:
-        raise HTTPException(status_code=400, detail="Email déjà utilisé")
-    user = crud.create_user(db, user_in.name, user_in.email, user_in.password, user_in.region)
-    return user
+# ===== ENDPOINT REGISTER =====
+@router.post("/register")
+def register(request: RegisterRequest, db: Session = Depends(get_db)):
+    # Vérifier si l'email existe déjà
+    existing_user = db.query(User).filter(User.email == request.email).first()
+    
+    if existing_user:
+        return {
+            "success": False,
+            "message": "Cet email est déjà utilisé",
+            "token": None,
+            "user": None
+        }
 
+    # Créer le nouvel utilisateur
+    new_user = User(
+        name=request.name,
+        email=request.email,
+        password=request.password, 
+        region=request.region
+    )
+    
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
 
-# ✅ ENDPOINT GET USER
-@router.get("/{user_id}", response_model=schemas.UserResponse)
-def get_user(user_id: int, db: Session = Depends(get_db)):
-    user = crud.get_user(db, user_id)
-    if not user:
-        raise HTTPException(status_code=404, detail="Utilisateur non trouvé")
-    return user
+    # Créer un token pour l'utilisateur
+    token = create_access_token({"sub": new_user.email})
+    
+    return {
+        "success": True,
+        "message": "Compte créé avec succès",
+        "token": token,
+        "user": {
+            "id": new_user.id,
+            "name": new_user.name,
+            "email": new_user.email,
+            "role": new_user.role,
+            "region": new_user.region
+        }
+    }
