@@ -96,9 +96,18 @@ class LoginActivity : AppCompatActivity() {
 
                         Toast.makeText(
                             this@LoginActivity,
-                            "Bienvenue ${user?.name}!",
+                            "Bienvenue ${body.user?.name}!",
                             Toast.LENGTH_LONG
                         ).show()
+
+                        // Naviguer vers HomeActivity
+                        val intent = Intent(this@LoginActivity, HomeActivity::class.java)
+                        intent.putExtra("USER_NAME", body.user?.name)
+                        intent.putExtra("USER_EMAIL", body.user?.email)
+                        intent.putExtra("TOKEN", body.token)
+                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        startActivity(intent)
+                        finish()
                     } else {
                         Log.e("LOGIN", "❌ SUCCESS = FALSE")
                         Log.e("LOGIN", "❌ Message d'erreur: ${body?.message}")
