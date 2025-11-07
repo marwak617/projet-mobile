@@ -10,6 +10,8 @@ import com.example.application_gestion_rdv.api.RetrofitClient
 import com.example.application_gestion_rdv.databinding.ActivityLoginBinding
 import com.example.application_gestion_rdv.models.LoginRequest
 import kotlinx.coroutines.launch
+import android.content.Intent
+
 
 class LoginActivity : AppCompatActivity() {
 
@@ -32,6 +34,9 @@ class LoginActivity : AppCompatActivity() {
             if (validateInput(email, password)) {
                 performLogin(email, password)
             }
+        }
+        binding.tvGoToRegister.setOnClickListener {
+            startActivity(Intent(this, RegisterActivity::class.java))
         }
     }
 
