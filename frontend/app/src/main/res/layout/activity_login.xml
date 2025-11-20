@@ -7,7 +7,15 @@
     android:gravity="center"
     android:padding="24dp"
     tools:context=".LoginActivity"
-    android:background="#F5F5F5">
+    android:background="@drawable/image_doc_2">
+
+    <ImageView
+        android:id="@+id/logoImage"
+        android:layout_width="295dp"
+        android:layout_height="171dp"
+        android:layout_marginBottom="24dp"
+        android:contentDescription="Logo"
+        android:src="@drawable/image_doc" />
 
     <TextView
         android:id="@+id/tvTitle"

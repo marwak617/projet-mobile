@@ -14,6 +14,8 @@ class User(Base):
     role  = Column(String, nullable=True)
     appointments = relationship("Appointment", back_populates="user")
     documents = relationship("Document", back_populates="user")
+    specialty = Column(String, nullable=True)
+    phone = Column(String, nullable=True)
 
 class Doctor(Base):
     __tablename__ = "doctors"
