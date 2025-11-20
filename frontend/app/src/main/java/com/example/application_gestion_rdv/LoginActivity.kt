@@ -100,14 +100,18 @@ class LoginActivity : AppCompatActivity() {
                             Toast.LENGTH_LONG
                         ).show()
 
-                        // Naviguer vers HomeActivity
-                        val intent = Intent(this@LoginActivity, HomeActivity::class.java)
-                        intent.putExtra("USER_NAME", body.user?.name)
-                        intent.putExtra("USER_EMAIL", body.user?.email)
-                        intent.putExtra("TOKEN", body.token)
-                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                        startActivity(intent)
-                        finish()
+                        if (response.isSuccessful && response.body()?.success == true) {
+                            val body = response.body()!!
+
+                            val intent = Intent(this@LoginActivity, HomeActivity::class.java)
+                            intent.putExtra("USER_NAME", body.user?.name)
+                            intent.putExtra("USER_EMAIL", body.user?.email)
+                            intent.putExtra("USER_ID", body.user?.id)  // ← Ajoutez cette ligne
+                            intent.putExtra("TOKEN", body.token)
+                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                            startActivity(intent)
+                            finish()
+                        }
                     } else {
                         Log.e("LOGIN", "❌ SUCCESS = FALSE")
                         Log.e("LOGIN", "❌ Message d'erreur: ${body?.message}")

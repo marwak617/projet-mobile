@@ -3,6 +3,7 @@ package com.example.application_gestion_rdv
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.example.application_gestion_rdv.databinding.ActivityHomeBinding
@@ -10,14 +11,27 @@ import com.example.application_gestion_rdv.databinding.ActivityHomeBinding
 class HomeActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityHomeBinding
+    private var userId: Int = -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityHomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // Récupérer l'ID utilisateur
+        userId = intent.getIntExtra("USER_ID", -1)
+
         setupUI()
         setupClickListeners()
+        setupBackPressHandler()
+    }
+
+    private fun setupBackPressHandler() {
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                showExitDialog()
+            }
+        })
     }
 
     private fun setupUI() {
@@ -29,7 +43,6 @@ class HomeActivity : AppCompatActivity() {
         binding.tvUserName.text = userName
 
         // Simuler un prochain rendez-vous (pour le moment)
-        // TODO: Récupérer depuis l'API
         showNextAppointment(hasAppointment = false)
     }
 
@@ -59,16 +72,14 @@ class HomeActivity : AppCompatActivity() {
 
         // Action: Trouver un médecin
         binding.cardFindDoctor.setOnClickListener {
-            Toast.makeText(this, "Fonctionnalité à venir : Rechercher un médecin", Toast.LENGTH_SHORT).show()
-            // TODO: Naviguer vers FindDoctorActivity
-            // startActivity(Intent(this, FindDoctorActivity::class.java))
+            startActivity(Intent(this, DoctorsListActivity::class.java))
         }
 
         // Action: Mon profil
         binding.cardMyProfile.setOnClickListener {
-            Toast.makeText(this, "Fonctionnalité à venir : Mon profil", Toast.LENGTH_SHORT).show()
-            // TODO: Naviguer vers ProfileActivity
-            // startActivity(Intent(this, ProfileActivity::class.java))
+            val intent = Intent(this, ProfileActivity::class.java)
+            intent.putExtra("USER_ID", userId)
+            startActivity(intent)
         }
 
         // Action: Voir détails du prochain RDV
@@ -86,6 +97,17 @@ class HomeActivity : AppCompatActivity() {
         binding.ivProfile.setOnClickListener {
             Toast.makeText(this, "Fonctionnalité à venir : Modifier la photo", Toast.LENGTH_SHORT).show()
         }
+    }
+
+    private fun showExitDialog() {
+        AlertDialog.Builder(this)
+            .setTitle("Quitter l'application")
+            .setMessage("Voulez-vous vraiment quitter ?")
+            .setPositiveButton("Oui") { _, _ ->
+                finishAffinity() // Fermer complètement l'app
+            }
+            .setNegativeButton("Non", null)
+            .show()
     }
 
     private fun showLogoutDialog() {
@@ -109,17 +131,5 @@ class HomeActivity : AppCompatActivity() {
         intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         startActivity(intent)
         finish()
-    }
-
-    // Empêcher le retour arrière vers Login après connexion
-    override fun onBackPressed() {
-        AlertDialog.Builder(this)
-            .setTitle("Quitter l'application")
-            .setMessage("Voulez-vous vraiment quitter ?")
-            .setPositiveButton("Oui") { _, _ ->
-                finishAffinity() // Fermer complètement l'app
-            }
-            .setNegativeButton("Non", null)
-            .show()
     }
 }
