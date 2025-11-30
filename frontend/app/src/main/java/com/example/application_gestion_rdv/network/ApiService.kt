@@ -8,6 +8,10 @@ import com.example.application_gestion_rdv.models.ProfileResponse
 import com.example.application_gestion_rdv.models.UpdateProfileRequest
 import com.example.application_gestion_rdv.models.ChangePasswordRequest
 import com.example.application_gestion_rdv.models.ChangePasswordResponse
+import com.example.application_gestion_rdv.models.DocumentsListResponse
+import com.example.application_gestion_rdv.models.DeleteDocumentResponse
+import com.example.application_gestion_rdv.models.UploadDocumentResponse
+
 import retrofit2.http.Path
 import retrofit2.http.PUT
 import retrofit2.Response
@@ -15,6 +19,12 @@ import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Query
+
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
+import retrofit2.http.DELETE
+import retrofit2.http.Multipart
+import retrofit2.http.Part
 
 interface ApiService {
     @POST("users/login")
@@ -40,4 +50,20 @@ interface ApiService {
         @Path("user_id") userId: Int,
         @Body request: ChangePasswordRequest
     ): Response<ChangePasswordResponse>
+    @Multipart
+    @POST("users/upload-document/{user_id}")
+    suspend fun uploadDocument(
+        @Path("user_id") userId: Int,
+        @Part file: MultipartBody.Part,
+        @Part("document_type") documentType: RequestBody
+    ): Response<UploadDocumentResponse>
+
+    @GET("users/documents/{user_id}")
+    suspend fun getUserDocuments(@Path("user_id") userId: Int): Response<DocumentsListResponse>
+
+    @DELETE("users/document/{user_id}/{filename}")
+    suspend fun deleteDocument(
+        @Path("user_id") userId: Int,
+        @Path("filename") filename: String
+    ): Response<DeleteDocumentResponse>
 }

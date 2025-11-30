@@ -12,6 +12,8 @@ import com.example.application_gestion_rdv.models.ChangePasswordRequest
 import com.example.application_gestion_rdv.models.UpdateProfileRequest
 import com.google.android.material.textfield.TextInputEditText
 import kotlinx.coroutines.launch
+import android.content.Intent
+
 
 class ProfileActivity : AppCompatActivity() {
 
@@ -46,6 +48,11 @@ class ProfileActivity : AppCompatActivity() {
 
         binding.btnChangePassword.setOnClickListener {
             showChangePasswordDialog()
+        }
+        binding.btnMyDocuments.setOnClickListener {
+            val intent = Intent(this, DocumentsActivity::class.java)
+            intent.putExtra("USER_ID", userId)
+            startActivity(intent)
         }
     }
 
