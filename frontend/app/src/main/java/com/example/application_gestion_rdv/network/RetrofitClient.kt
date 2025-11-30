@@ -6,7 +6,7 @@ import com.example.application_gestion_rdv.network.ApiService
 object RetrofitClient {
 
 
-    const val BASE_URL = "http://10.0.2.2:8000/"
+    const val BASE_URL = "http://192.168.1.7:8000/"
 
     // ✅ Pour appareil réel, utilisez l'IP de votre machine
     // const val BASE_URL = "http://192.168.1.X:8000/api/"

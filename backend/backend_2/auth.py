@@ -1,12 +1,18 @@
 # backend/routers/auth.py
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, File, UploadFile, Form
 from sqlalchemy.orm import Session
 from database import get_db
-from models import User
+from models import User, MedicalDocument
 from pydantic import BaseModel
 import jwt
 from datetime import datetime, timedelta
 import os
+from typing import List, Optional
+import shutil
+
+# Dossier pour stocker les documents
+UPLOAD_DIR = "uploads/medical_documents"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 router = APIRouter(prefix="/users", tags=["Authentication"])
 
@@ -25,7 +31,7 @@ class RegisterRequest(BaseModel):
     name: str
     email: str
     password: str
-    region: str = None  # Optionnel
+    region: str = None
 
 
 class UserResponse(BaseModel):
@@ -38,7 +44,6 @@ class UserResponse(BaseModel):
     class Config:
         from_attributes = True
 
-# backend/routers/auth.py
 
 class UpdateProfileRequest(BaseModel):
     name: str
@@ -47,6 +52,34 @@ class UpdateProfileRequest(BaseModel):
     address: str = None
 
 
+class DocumentResponse(BaseModel):
+    id: int
+    user_id: int
+    filename: str
+    original_filename: str
+    file_type: str
+    upload_date: str
+    file_size: int
+    mime_type: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class ChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+
+# ===== FONCTION TOKEN =====
+def create_access_token(data: dict, expires_delta: timedelta = None):
+    to_encode = data.copy()
+    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+
+
+# ===== ENDPOINTS PROFIL =====
 @router.get("/profile/{user_id}")
 def get_profile(user_id: int, db: Session = Depends(get_db)):
     """Récupérer le profil d'un utilisateur"""
@@ -83,7 +116,6 @@ def update_profile(user_id: int, request: UpdateProfileRequest, db: Session = De
             "message": "Utilisateur non trouvé"
         }
     
-    # Mettre à jour les champs
     user.name = request.name
     if hasattr(user, 'phone'):
         user.phone = request.phone
@@ -110,11 +142,6 @@ def update_profile(user_id: int, request: UpdateProfileRequest, db: Session = De
     }
 
 
-class ChangePasswordRequest(BaseModel):
-    current_password: str
-    new_password: str
-
-
 @router.put("/change-password/{user_id}")
 def change_password(user_id: int, request: ChangePasswordRequest, db: Session = Depends(get_db)):
     """Changer le mot de passe"""
@@ -126,14 +153,12 @@ def change_password(user_id: int, request: ChangePasswordRequest, db: Session = 
             "message": "Utilisateur non trouvé"
         }
     
-    # Vérifier l'ancien mot de passe
     if user.password != request.current_password:
         return {
             "success": False,
             "message": "Mot de passe actuel incorrect"
         }
     
-    # Mettre à jour le mot de passe
     user.password = request.new_password
     db.commit()
     
@@ -141,13 +166,6 @@ def change_password(user_id: int, request: ChangePasswordRequest, db: Session = 
         "success": True,
         "message": "Mot de passe modifié avec succès"
     }
-
-# ===== FONCTION TOKEN =====
-def create_access_token(data: dict, expires_delta: timedelta = None):
-    to_encode = data.copy()
-    expire = datetime.utcnow() + (expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
-    to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 
 # ===== ENDPOINT LOGIN =====
@@ -190,7 +208,6 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
 # ===== ENDPOINT REGISTER =====
 @router.post("/register")
 def register(request: RegisterRequest, db: Session = Depends(get_db)):
-    # Vérifier si l'email existe déjà
     existing_user = db.query(User).filter(User.email == request.email).first()
     
     if existing_user:
@@ -201,7 +218,6 @@ def register(request: RegisterRequest, db: Session = Depends(get_db)):
             "user": None
         }
 
-    # Créer le nouvel utilisateur
     new_user = User(
         name=request.name,
         email=request.email,
@@ -213,7 +229,6 @@ def register(request: RegisterRequest, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_user)
 
-    # Créer un token pour l'utilisateur
     token = create_access_token({"sub": new_user.email})
     
     return {
@@ -228,3 +243,194 @@ def register(request: RegisterRequest, db: Session = Depends(get_db)):
             "region": new_user.region
         }
     }
+
+
+# ===== ENDPOINTS DOCUMENTS =====
+@router.post("/upload-document/{user_id}")
+async def upload_document(
+    user_id: int,
+    file: UploadFile = File(...),
+    document_type: str = Form("mutuelle"),
+    db: Session = Depends(get_db)
+):
+    """Télécharger un document médical"""
+    
+    # Vérifier que l'utilisateur existe
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        return {
+            "success": False,
+            "message": "Utilisateur non trouvé"
+        }
+    
+    # Validation du type de document
+    valid_types = ["mutuelle", "ordonnance", "analyse", "radio", "autre"]
+    if document_type not in valid_types:
+        document_type = "autre"
+    
+    # Générer un nom de fichier unique
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    file_extension = os.path.splitext(file.filename)[1]
+    unique_filename = f"{user_id}_{document_type}_{timestamp}{file_extension}"
+    file_path = os.path.join(UPLOAD_DIR, unique_filename)
+    
+    # Sauvegarder le fichier physique
+    try:
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        file_size = os.path.getsize(file_path)
+        
+        # Créer l'entrée en base de données
+        new_document = MedicalDocument(
+            user_id=user_id,
+            filename=unique_filename,
+            original_filename=file.filename,
+            file_type=document_type,
+            file_size=file_size,
+            mime_type=file.content_type
+        )
+        
+        db.add(new_document)
+        db.commit()
+        db.refresh(new_document)
+        
+        return {
+            "success": True,
+            "message": "Document téléchargé avec succès",
+            "document": {
+                "id": new_document.id,
+                "filename": new_document.filename,
+                "original_filename": new_document.original_filename,
+                "file_type": new_document.file_type,
+                "upload_date": new_document.upload_date.isoformat(),
+                "file_size": new_document.file_size,
+                "mime_type": new_document.mime_type
+            }
+        }
+        
+    except Exception as e:
+        # Nettoyer en cas d'erreur
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        db.rollback()
+        
+        return {
+            "success": False,
+            "message": f"Erreur lors du téléchargement: {str(e)}"
+        }
+
+
+@router.get("/documents/{user_id}")
+def get_user_documents(user_id: int, db: Session = Depends(get_db)):
+    """Récupérer la liste des documents d'un utilisateur"""
+    
+    # Vérifier que l'utilisateur existe
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        return {
+            "success": False,
+            "message": "Utilisateur non trouvé",
+            "documents": []
+        }
+    
+    # Récupérer les documents depuis la base de données
+    documents = db.query(MedicalDocument)\
+        .filter(MedicalDocument.user_id == user_id)\
+        .order_by(MedicalDocument.upload_date.desc())\
+        .all()
+    
+    # Vérifier que les fichiers existent physiquement
+    document_list = []
+    for doc in documents:
+        file_path = os.path.join(UPLOAD_DIR, doc.filename)
+        
+        # Si le fichier n'existe plus physiquement, on peut le signaler
+        if not os.path.exists(file_path):
+            print(f"Warning: Fichier {doc.filename} manquant pour le document ID {doc.id}")
+        
+        document_list.append({
+            "id": doc.id,
+            "filename": doc.filename,
+            "original_filename": doc.original_filename,
+            "file_type": doc.file_type,
+            "file_size": doc.file_size,
+            "upload_date": doc.upload_date.isoformat(),
+            "mime_type": doc.mime_type
+        })
+    
+    return {
+        "success": True,
+        "count": len(document_list),
+        "documents": document_list
+    }
+
+
+@router.delete("/document/{user_id}/{filename}")
+def delete_document(user_id: int, filename: str, db: Session = Depends(get_db)):
+    """Supprimer un document"""
+    
+    # Vérifier que le document appartient à l'utilisateur
+    document = db.query(MedicalDocument)\
+        .filter(
+            MedicalDocument.user_id == user_id,
+            MedicalDocument.filename == filename
+        )\
+        .first()
+    
+    if not document:
+        return {
+            "success": False,
+            "message": "Document non trouvé ou accès non autorisé"
+        }
+    
+    file_path = os.path.join(UPLOAD_DIR, filename)
+    
+    try:
+        # Supprimer le fichier physique s'il existe
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        
+        # Supprimer l'entrée en base de données
+        db.delete(document)
+        db.commit()
+        
+        return {
+            "success": True,
+            "message": "Document supprimé avec succès"
+        }
+        
+    except Exception as e:
+        db.rollback()
+        return {
+            "success": False,
+            "message": f"Erreur lors de la suppression: {str(e)}"
+        }
+
+
+@router.get("/document/download/{user_id}/{filename}")
+def download_document(user_id: int, filename: str, db: Session = Depends(get_db)):
+    """Télécharger un document"""
+    from fastapi.responses import FileResponse
+    
+    # Vérifier que le document appartient à l'utilisateur
+    document = db.query(MedicalDocument)\
+        .filter(
+            MedicalDocument.user_id == user_id,
+            MedicalDocument.filename == filename
+        )\
+        .first()
+    
+    if not document:
+        raise HTTPException(status_code=404, detail="Document non trouvé")
+    
+    file_path = os.path.join(UPLOAD_DIR, filename)
+    
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="Fichier physique non trouvé")
+    
+    return FileResponse(
+        path=file_path,
+        filename=document.original_filename,
+        media_type=document.mime_type or "application/octet-stream"
+    )
