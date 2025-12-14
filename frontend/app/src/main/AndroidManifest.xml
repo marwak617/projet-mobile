@@ -55,6 +55,13 @@
         <activity
             android:name=".DocumentsActivity"
             android:exported="false" />
+        <activity
+            android:name=".BookAppointmentActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".MyAppointmentsActivity"
+            android:exported="false" />
     </application>
 
 </manifest>

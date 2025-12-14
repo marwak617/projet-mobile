@@ -3,6 +3,7 @@ from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Text
 from sqlalchemy.orm import relationship
 from database import Base
 from datetime import datetime
+import enum
 
 
 class User(Base):
@@ -18,9 +19,24 @@ class User(Base):
     phone = Column(String, nullable=True)
     address = Column(String, nullable=True)
     
-    # Relations
-    appointments = relationship("Appointment", back_populates="user", cascade="all, delete-orphan")
+    # Relations CORRIGÉES avec foreign_keys explicites
     documents = relationship("MedicalDocument", back_populates="user", cascade="all, delete-orphan")
+    
+    # Rendez-vous en tant que patient
+    patient_appointments = relationship(
+        "Appointment",
+        foreign_keys="Appointment.patient_id",
+        back_populates="patient",
+        cascade="all, delete-orphan"
+    )
+    
+    # Rendez-vous en tant que médecin
+    doctor_appointments = relationship(
+        "Appointment",
+        foreign_keys="Appointment.doctor_id",
+        back_populates="doctor",
+        cascade="all, delete-orphan"
+    )
 
 
 class MedicalDocument(Base):
@@ -30,11 +46,11 @@ class MedicalDocument(Base):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     
     # Informations sur le fichier
-    filename = Column(String, nullable=False, unique=True)  # Nom stocké sur le serveur
-    original_filename = Column(String, nullable=False)  # Nom original du fichier
-    file_type = Column(String, nullable=False)  # mutuelle, ordonnance, analyse, radio, autre
-    file_size = Column(Integer, nullable=False)  # Taille en octets
-    mime_type = Column(String, nullable=True)  # image/jpeg, application/pdf, etc.
+    filename = Column(String, nullable=False, unique=True)
+    original_filename = Column(String, nullable=False)
+    file_type = Column(String, nullable=False)
+    file_size = Column(Integer, nullable=False)
+    mime_type = Column(String, nullable=True)
     
     # Dates
     upload_date = Column(DateTime, default=datetime.utcnow, nullable=False)
@@ -44,29 +60,36 @@ class MedicalDocument(Base):
     user = relationship("User", back_populates="documents")
 
 
-class Doctor(Base):
-    __tablename__ = "doctors"
-    
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, nullable=False)
-    speciality = Column(String, nullable=True)
-    city = Column(String, nullable=True)
-    latitude = Column(String, nullable=True)
-    longitude = Column(String, nullable=True)
-    
-    # Relation
-    appointments = relationship("Appointment", back_populates="doctor", cascade="all, delete-orphan")
+class AppointmentStatus(enum.Enum):
+    PENDING = "pending"
+    CONFIRMED = "confirmed"
+    REJECTED = "rejected"
+    CANCELLED = "cancelled"
+    COMPLETED = "completed"
 
 
 class Appointment(Base):
     __tablename__ = "appointments"
     
     id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    doctor_id = Column(Integer, ForeignKey("doctors.id", ondelete="CASCADE"), nullable=False)
-    date = Column(DateTime, default=datetime.utcnow, nullable=False)
+    patient_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    doctor_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    appointment_date = Column(DateTime, nullable=False)
     status = Column(String, default="pending")
+    reason = Column(String, nullable=True)
+    notes = Column(String, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Relations
-    user = relationship("User", back_populates="appointments")
-    doctor = relationship("Doctor", back_populates="appointments")
+    # Relations CORRIGÉES avec back_populates
+    patient = relationship(
+        "User",
+        foreign_keys=[patient_id],
+        back_populates="patient_appointments"
+    )
+    
+    doctor = relationship(
+        "User",
+        foreign_keys=[doctor_id],
+        back_populates="doctor_appointments"
+    )
