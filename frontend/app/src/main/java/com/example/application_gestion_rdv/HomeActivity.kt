@@ -18,7 +18,6 @@ class HomeActivity : AppCompatActivity() {
         binding = ActivityHomeBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Récupérer l'ID utilisateur
         userId = intent.getIntExtra("USER_ID", -1)
 
         setupUI()
@@ -63,18 +62,6 @@ class HomeActivity : AppCompatActivity() {
             // startActivity(Intent(this, BookAppointmentActivity::class.java))
         }
 
-        // Action: Mes rendez-vous
-        binding.cardMyAppointments.setOnClickListener {
-            Toast.makeText(this, "Fonctionnalité à venir : Mes rendez-vous", Toast.LENGTH_SHORT).show()
-            // TODO: Naviguer vers MyAppointmentsActivity
-            // startActivity(Intent(this, MyAppointmentsActivity::class.java))
-        }
-
-        // Action: Trouver un médecin
-        binding.cardFindDoctor.setOnClickListener {
-            startActivity(Intent(this, DoctorsListActivity::class.java))
-        }
-
         // Action: Mon profil
         binding.cardMyProfile.setOnClickListener {
             val intent = Intent(this, ProfileActivity::class.java)
@@ -96,6 +83,27 @@ class HomeActivity : AppCompatActivity() {
         // Action: Photo de profil
         binding.ivProfile.setOnClickListener {
             Toast.makeText(this, "Fonctionnalité à venir : Modifier la photo", Toast.LENGTH_SHORT).show()
+        }
+
+        // Action: Prendre un RDV (via liste des médecins)
+        binding.cardBookAppointment.setOnClickListener {
+            val intent = Intent(this, DoctorsListActivity::class.java)
+            intent.putExtra("PATIENT_ID", userId)
+            startActivity(intent)
+        }
+
+        // Action: Mes rendez-vous
+        binding.cardMyAppointments.setOnClickListener {
+            val intent = Intent(this, MyAppointmentsActivity::class.java)
+            intent.putExtra("USER_ID", userId)
+            startActivity(intent)
+        }
+
+        // Action: Trouver un médecin
+        binding.cardFindDoctor.setOnClickListener {
+            val intent = Intent(this, DoctorsListActivity::class.java)
+            intent.putExtra("PATIENT_ID", userId)
+            startActivity(intent)
         }
     }
 

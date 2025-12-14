@@ -1,261 +1,289 @@
-# backend/seed_database.py
-"""
-Script pour remplir la base de données avec des données de test
-"""
+# backend/seed_test_data.py
 
-from faker import Faker
 from sqlalchemy.orm import Session
 from database import SessionLocal, engine, Base
-from models import User, Doctor, Appointment, MedicalDocument
+from models import User, Appointment
 from datetime import datetime, timedelta
 import random
-import os
 
-# Créer les tables si elles n'existent pas
-Base.metadata.create_all(bind=engine)
+def create_tables():
+    """Créer toutes les tables"""
+    print("📦 Création des tables...")
+    Base.metadata.create_all(bind=engine)
+    print("✅ Tables créées avec succès!")
 
-# Initialiser Faker avec localisation française
-fake = Faker('fr_FR')
-
-# Créer le dossier pour les documents si nécessaire
-UPLOAD_DIR = "uploads/medical_documents"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
-
-
-def clear_database(db: Session):
-    """Vider complètement la base de données"""
+def clear_data(db: Session):
+    """Supprimer toutes les données existantes"""
     print("🗑️  Suppression des données existantes...")
     db.query(Appointment).delete()
-    db.query(MedicalDocument).delete()
-    db.query(Doctor).delete()
     db.query(User).delete()
     db.commit()
-    print("✅ Base de données vidée")
+    print("✅ Données supprimées!")
 
-
-def seed_users(db: Session, n=10):
+def create_users(db: Session):
     """Créer des utilisateurs de test"""
-    users = []
+    print("\n👥 Création des utilisateurs...")
     
-    # Créer un utilisateur de test avec identifiants connus
-    test_user = User(
-        name="Test User",
-        email="test@test.com",
-        password="test123",
-        region="Casablanca",
-        role="patient",
-        phone="+212 6 12 34 56 78",
-        address="123 Rue Test, Casablanca"
-    )
-    users.append(test_user)
-    db.add(test_user)
+    # Patients
+    patients = [
+        {
+            "name": "Nicolas Dumas",
+            "email": "ndumas@example.org",
+            "password": "password123",
+            "role": "patient",
+            "region": "Casablanca",
+            "phone": "+212 6 12 34 56 78",
+            "address": "123 Rue Mohammed V, Casablanca"
+        },
+        {
+            "name": "Fatima Alaoui",
+            "email": "falaoui@patient.ma",
+            "password": "password123",
+            "role": "patient",
+            "region": "Rabat",
+            "phone": "+212 6 23 45 67 89",
+            "address": "45 Avenue Hassan II, Rabat"
+        },
+        {
+            "name": "Ahmed Benali",
+            "email": "abenali@patient.ma",
+            "password": "password123",
+            "role": "patient",
+            "region": "Marrakech",
+            "phone": "+212 6 34 56 78 90",
+            "address": "78 Rue de la Liberté, Marrakech"
+        },
+        {
+            "name": "Leila Mansouri",
+            "email": "lmansouri@patient.ma",
+            "password": "password123",
+            "role": "patient",
+            "region": "Fès",
+            "phone": "+212 6 45 67 89 01",
+            "address": "12 Boulevard Zerktouni, Fès"
+        }
+    ]
     
-    # Créer des utilisateurs aléatoires
-    for _ in range(n - 1):
-        user = User(
-            name=fake.name(),
-            email=fake.unique.email(),
-            password="password123",
-            region=random.choice([
-                "Casablanca", "Rabat", "Marrakech", "Fès", 
-                "Tanger", "Agadir", "Meknès", "Oujda"
-            ]),
-            role="patient",
-            phone=fake.phone_number(),
-            address=fake.address()
-        )
-        users.append(user)
+    # Médecins
+    doctors = [
+        {
+            "name": "Hassan Bennani",
+            "email": "hbennani@doctor.ma",
+            "password": "doctor123",
+            "role": "doctor",
+            "specialty": "Cardiologue",
+            "region": "Casablanca",
+            "phone": "+212 5 22 12 34 56",
+            "address": "Clinique Al Amal, Bd Anfa, Casablanca"
+        },
+        {
+            "name": "Samira Tazi",
+            "email": "stazi@doctor.ma",
+            "password": "doctor123",
+            "role": "doctor",
+            "specialty": "Pédiatre",
+            "region": "Rabat",
+            "phone": "+212 5 37 23 45 67",
+            "address": "Cabinet Médical, Agdal, Rabat"
+        },
+        {
+            "name": "Youssef Idrissi",
+            "email": "yidrissi@doctor.ma",
+            "password": "doctor123",
+            "role": "doctor",
+            "specialty": "Dentiste",
+            "region": "Marrakech",
+            "phone": "+212 5 24 34 56 78",
+            "address": "Centre Dentaire, Guéliz, Marrakech"
+        },
+        {
+            "name": "Khadija El Amrani",
+            "email": "kelamrani@doctor.ma",
+            "password": "doctor123",
+            "role": "doctor",
+            "specialty": "Dermatologue",
+            "region": "Fès",
+            "phone": "+212 5 35 45 67 89",
+            "address": "Polyclinique Atlas, Fès"
+        },
+        {
+            "name": "Mohamed Chakir",
+            "email": "mchakir@doctor.ma",
+            "password": "doctor123",
+            "role": "doctor",
+            "specialty": "Généraliste",
+            "region": "Casablanca",
+            "phone": "+212 5 22 56 78 90",
+            "address": "Cabinet Médical, Maarif, Casablanca"
+        },
+        {
+            "name": "Nadia Berrada",
+            "email": "nberrada@doctor.ma",
+            "password": "doctor123",
+            "role": "doctor",
+            "specialty": "Gynécologue",
+            "region": "Rabat",
+            "phone": "+212 5 37 67 89 01",
+            "address": "Clinique de la Femme, Hassan, Rabat"
+        },
+        {
+            "name": "Rachid Amrani",
+            "email": "ramrani@doctor.ma",
+            "password": "doctor123",
+            "role": "doctor",
+            "specialty": "Ophtalmologue",
+            "region": "Tanger",
+            "phone": "+212 5 39 78 90 12",
+            "address": "Centre Ophtalmologique, Tanger"
+        }
+    ]
+    
+    created_users = []
+    
+    # Créer les patients
+    for patient_data in patients:
+        user = User(**patient_data)
         db.add(user)
+        db.flush()  # Pour obtenir l'ID
+        created_users.append(user)
+        print(f"   ✅ Patient créé: {user.name} (ID: {user.id})")
+    
+    # Créer les médecins
+    for doctor_data in doctors:
+        user = User(**doctor_data)
+        db.add(user)
+        db.flush()
+        created_users.append(user)
+        print(f"   ✅ Médecin créé: Dr. {user.name} - {user.specialty} (ID: {user.id})")
     
     db.commit()
-    
-    # Rafraîchir pour obtenir les IDs
-    for user in users:
-        db.refresh(user)
-    
-    print(f"✅ {len(users)} utilisateurs ajoutés!")
-    print(f"   📧 Compte de test: test@test.com / test123")
-    return users
+    return created_users
 
-
-def seed_doctors(db: Session, n=10):
-    """Créer des médecins de test"""
-    doctors = []
-    
-    specialities = [
-        "Cardiologue", "Dentiste", "Dermatologue", "Généraliste", 
-        "Pédiatre", "Ophtalmologue", "Gynécologue", "ORL",
-        "Psychiatre", "Radiologue"
-    ]
-    
-    moroccan_cities = [
-        ("Casablanca", 33.5731, -7.5898),
-        ("Rabat", 34.0209, -6.8416),
-        ("Marrakech", 31.6295, -7.9811),
-        ("Fès", 34.0181, -5.0078),
-        ("Tanger", 35.7595, -5.8340),
-        ("Agadir", 30.4278, -9.5981),
-        ("Meknès", 33.8935, -5.5473),
-        ("Oujda", 34.6814, -1.9086)
-    ]
-    
-    for _ in range(n):
-        city, lat, lon = random.choice(moroccan_cities)
-        doctor = Doctor(
-            name=f"Dr. {fake.last_name()} {fake.first_name()}",
-            speciality=random.choice(specialities),
-            city=city,
-            latitude=str(lat + random.uniform(-0.1, 0.1)),
-            longitude=str(lon + random.uniform(-0.1, 0.1))
-        )
-        doctors.append(doctor)
-        db.add(doctor)
-    
-    db.commit()
-    
-    # Rafraîchir pour obtenir les IDs
-    for doctor in doctors:
-        db.refresh(doctor)
-    
-    print(f"✅ {len(doctors)} médecins ajoutés!")
-    return doctors
-
-
-def seed_appointments(db: Session, users, doctors, n=20):
+def create_appointments(db: Session, users):
     """Créer des rendez-vous de test"""
-    appointments = []
+    print("\n📅 Création des rendez-vous...")
     
-    for _ in range(n):
-        # Date aléatoire entre -30 jours et +60 jours
-        days_offset = random.randint(-30, 60)
-        appointment_date = datetime.now() + timedelta(days=days_offset)
+    # Séparer patients et médecins
+    patients = [u for u in users if u.role == "patient"]
+    doctors = [u for u in users if u.role == "doctor"]
+    
+    statuses = ["pending", "confirmed", "rejected", "cancelled", "completed"]
+    reasons = [
+        "Consultation générale",
+        "Contrôle de routine",
+        "Douleurs thoraciques",
+        "Check-up annuel",
+        "Problème de peau",
+        "Mal de dents",
+        "Vaccination",
+        "Suivi post-opératoire",
+        "Consultation pédiatrique",
+        "Examen de la vue"
+    ]
+    
+    appointments_count = 0
+    
+    # Créer des rendez-vous pour chaque patient
+    for patient in patients:
+        # 2-4 rendez-vous par patient
+        num_appointments = random.randint(2, 4)
         
-        # Statut en fonction de la date
-        if days_offset < 0:
-            status = random.choice(["confirmed", "cancelled", "completed"])
-        else:
-            status = random.choice(["pending", "confirmed"])
-        
-        appointment = Appointment(
-            user_id=random.choice(users).id,
-            doctor_id=random.choice(doctors).id,
-            date=appointment_date,
-            status=status
-        )
-        appointments.append(appointment)
-        db.add(appointment)
+        for i in range(num_appointments):
+            doctor = random.choice(doctors)
+            
+            # Dates variées (passé, présent, futur)
+            days_offset = random.randint(-30, 60)  # De -30 jours à +60 jours
+            hours = random.choice([9, 10, 11, 14, 15, 16, 17])
+            minutes = random.choice([0, 30])
+            
+            appointment_date = datetime.now() + timedelta(
+                days=days_offset,
+                hours=hours - datetime.now().hour,
+                minutes=minutes - datetime.now().minute
+            )
+            
+            # Statut selon la date
+            if days_offset < -7:
+                status = "completed"
+            elif days_offset < 0:
+                status = random.choice(["completed", "cancelled"])
+            elif days_offset < 2:
+                status = random.choice(["pending", "confirmed"])
+            else:
+                status = random.choice(["pending", "confirmed", "rejected"])
+            
+            appointment = Appointment(
+                patient_id=patient.id,
+                doctor_id=doctor.id,
+                appointment_date=appointment_date,
+                status=status,
+                reason=random.choice(reasons),
+                notes=f"Notes pour le rendez-vous #{appointments_count + 1}" if random.random() > 0.5 else None,
+                created_at=datetime.now() - timedelta(days=abs(days_offset) + 1),
+                updated_at=datetime.now()
+            )
+            
+            db.add(appointment)
+            appointments_count += 1
+            
+            status_emoji = {
+                "pending": "⏳",
+                "confirmed": "✅",
+                "rejected": "❌",
+                "cancelled": "🚫",
+                "completed": "✔️"
+            }
+            
+            print(f"   {status_emoji.get(status, '📅')} RDV: {patient.name} → Dr. {doctor.name} "
+                  f"({appointment_date.strftime('%d/%m/%Y %H:%M')}) [{status}]")
     
     db.commit()
-    print(f"✅ {len(appointments)} rendez-vous ajoutés!")
-    return appointments
-
-
-def seed_medical_documents(db: Session, users, n=15):
-    """Créer des documents médicaux de test (métadonnées seulement)"""
-    documents = []
-    
-    document_types = ["mutuelle", "ordonnance", "analyse", "radio", "autre"]
-    file_extensions = {
-        "mutuelle": [".pdf", ".jpg"],
-        "ordonnance": [".pdf", ".jpg"],
-        "analyse": [".pdf"],
-        "radio": [".jpg", ".png", ".dcm"],
-        "autre": [".pdf", ".jpg", ".doc"]
-    }
-    
-    mime_types = {
-        ".pdf": "application/pdf",
-        ".jpg": "image/jpeg",
-        ".png": "image/png",
-        ".dcm": "application/dicom",
-        ".doc": "application/msword"
-    }
-    
-    for _ in range(n):
-        user = random.choice(users)
-        doc_type = random.choice(document_types)
-        extension = random.choice(file_extensions[doc_type])
-        
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        random_suffix = random.randint(1000, 9999)
-        filename = f"{user.id}_{doc_type}_{timestamp}_{random_suffix}{extension}"
-        
-        # Créer un fichier vide pour la démo (optionnel)
-        file_path = os.path.join(UPLOAD_DIR, filename)
-        with open(file_path, 'w') as f:
-            f.write(f"Document de test - {doc_type}")
-        
-        file_size = os.path.getsize(file_path)
-        
-        document = MedicalDocument(
-            user_id=user.id,
-            filename=filename,
-            original_filename=f"{doc_type}_{fake.word()}{extension}",
-            file_type=doc_type,
-            file_size=file_size,
-            mime_type=mime_types.get(extension, "application/octet-stream"),
-            upload_date=datetime.now() - timedelta(days=random.randint(0, 90))
-        )
-        documents.append(document)
-        db.add(document)
-    
-    db.commit()
-    print(f"✅ {len(documents)} documents médicaux ajoutés!")
-    return documents
-
-
-def display_summary(db: Session):
-    """Afficher un résumé des données"""
-    print("\n" + "="*60)
-    print("📊 RÉSUMÉ DE LA BASE DE DONNÉES")
-    print("="*60)
-    
-    user_count = db.query(User).count()
-    doctor_count = db.query(Doctor).count()
-    appointment_count = db.query(Appointment).count()
-    document_count = db.query(MedicalDocument).count()
-    
-    print(f"👥 Utilisateurs: {user_count}")
-    print(f"⚕️  Médecins: {doctor_count}")
-    print(f"📅 Rendez-vous: {appointment_count}")
-    print(f"📄 Documents: {document_count}")
-    
-    print("\n📌 Informations de connexion:")
-    print("   Email: test@test.com")
-    print("   Mot de passe: test123")
-    print("="*60 + "\n")
-
+    print(f"\n✅ {appointments_count} rendez-vous créés!")
 
 def main():
+    """Fonction principale"""
+    print("=" * 60)
+    print("🚀 INITIALISATION DE LA BASE DE DONNÉES")
+    print("=" * 60)
+    
+    # Créer les tables
+    create_tables()
+    
+    # Créer une session
     db = SessionLocal()
     
     try:
-        print("🚀 Démarrage du remplissage de la base de données...")
-        print()
+        # Supprimer les anciennes données
+        clear_data(db)
         
-        # Demander confirmation pour vider la base
-        response = input("⚠️  Voulez-vous vider la base de données avant? (oui/non): ")
-        if response.lower() in ['oui', 'yes', 'o', 'y']:
-            clear_database(db)
-            print()
+        # Créer les utilisateurs
+        users = create_users(db)
         
-        # Remplir la base de données
-        users = seed_users(db, n=15)
-        doctors = seed_doctors(db, n=12)
-        appointments = seed_appointments(db, users, doctors, n=30)
-        documents = seed_medical_documents(db, users, n=20)
+        # Créer les rendez-vous
+        create_appointments(db, users)
         
-        # Afficher le résumé
-        display_summary(db)
+        print("\n" + "=" * 60)
+        print("✨ BASE DE DONNÉES INITIALISÉE AVEC SUCCÈS!")
+        print("=" * 60)
+        print("\n📊 RÉSUMÉ:")
+        print(f"   👥 Patients: {len([u for u in users if u.role == 'patient'])}")
+        print(f"   👨‍⚕️ Médecins: {len([u for u in users if u.role == 'doctor'])}")
+        print(f"   📅 Rendez-vous: {db.query(Appointment).count()}")
         
-        print("🎉 Données de test insérées avec succès!")
+        print("\n🔑 IDENTIFIANTS DE TEST:")
+        print("\n   📱 PATIENT:")
+        print("      Email: ndumas@example.org")
+        print("      Password: password123")
+        print("\n   👨‍⚕️ MÉDECIN:")
+        print("      Email: hbennani@doctor.ma")
+        print("      Password: doctor123")
         
     except Exception as e:
-        print(f"❌ Erreur: {e}")
+        print(f"\n❌ ERREUR: {e}")
         db.rollback()
+        raise
     finally:
         db.close()
-
 
 if __name__ == "__main__":
     main()

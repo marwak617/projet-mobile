@@ -45,10 +45,14 @@ class DoctorsListActivity : AppCompatActivity() {
         private const val TAG = "DoctorsListActivity"
     }
 
+    private var patientId: Int = -1
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityDoctorsListBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        patientId = intent.getIntExtra("PATIENT_ID", -1) // Récupérer depuis HomeActivity
 
         setupUI()
         setupRecyclerView()
@@ -199,17 +203,11 @@ class DoctorsListActivity : AppCompatActivity() {
     }
 
     private fun onDoctorSelected(doctor: Doctor) {
-        Toast.makeText(
-            this,
-            "Prendre RDV avec Dr. ${doctor.name}",
-            Toast.LENGTH_SHORT
-        ).show()
-
-        // TODO: Naviguer vers l'écran de prise de RDV
-        // val intent = Intent(this, BookAppointmentActivity::class.java)
-        // intent.putExtra("DOCTOR_ID", doctor.id)
-        // intent.putExtra("DOCTOR_NAME", doctor.name)
-        // intent.putExtra("DOCTOR_SPECIALTY", doctor.specialty)
-        // startActivity(intent)
+        val intent = Intent(this, BookAppointmentActivity::class.java)
+        intent.putExtra("DOCTOR_ID", doctor.id)
+        intent.putExtra("DOCTOR_NAME", doctor.name)
+        intent.putExtra("DOCTOR_SPECIALTY", doctor.specialty)
+        intent.putExtra("PATIENT_ID", patientId) // Ajoutez patientId comme variable de classe
+        startActivity(intent)
     }
 }

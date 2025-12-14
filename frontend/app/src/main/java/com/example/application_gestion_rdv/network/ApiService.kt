@@ -11,6 +11,12 @@ import com.example.application_gestion_rdv.models.ChangePasswordResponse
 import com.example.application_gestion_rdv.models.DocumentsListResponse
 import com.example.application_gestion_rdv.models.DeleteDocumentResponse
 import com.example.application_gestion_rdv.models.UploadDocumentResponse
+import com.example.application_gestion_rdv.models.Appointment
+import com.example.application_gestion_rdv.models.AppointmentCreate
+import com.example.application_gestion_rdv.models.AppointmentCreateResponse
+import com.example.application_gestion_rdv.models.AppointmentStatusResponse
+import com.example.application_gestion_rdv.models.AppointmentsListResponse
+import com.example.application_gestion_rdv.models.AvailabilityResponse
 
 import retrofit2.http.Path
 import retrofit2.http.PUT
@@ -66,4 +72,41 @@ interface ApiService {
         @Path("user_id") userId: Int,
         @Path("filename") filename: String
     ): Response<DeleteDocumentResponse>
+
+    @POST("appointments/create")
+    suspend fun createAppointment(
+        @Query("patient_id") patientId: Int,
+        @Body appointment: AppointmentCreate
+    ): Response<AppointmentCreateResponse>
+
+    @GET("appointments/patient/{patient_id}")
+    suspend fun getPatientAppointments(
+        @Path("patient_id") patientId: Int,
+        @Query("status") status: String? = null
+    ): Response<AppointmentsListResponse>
+
+    @GET("appointments/doctor/{doctor_id}")
+    suspend fun getDoctorAppointments(
+        @Path("doctor_id") doctorId: Int,
+        @Query("status") status: String? = null
+    ): Response<AppointmentsListResponse>
+
+    @PUT("appointments/{appointment_id}/status")
+    suspend fun updateAppointmentStatus(
+        @Path("appointment_id") appointmentId: Int,
+        @Query("status") status: String,
+        @Query("user_id") userId: Int
+    ): Response<AppointmentStatusResponse>
+
+    @DELETE("appointments/{appointment_id}")
+    suspend fun deleteAppointment(
+        @Path("appointment_id") appointmentId: Int,
+        @Query("user_id") userId: Int
+    ): Response<AppointmentStatusResponse>
+
+    @GET("appointments/doctor/{doctor_id}/availability")
+    suspend fun getDoctorAvailability(
+        @Path("doctor_id") doctorId: Int,
+        @Query("date") date: String
+    ): Response<AvailabilityResponse>
 }
