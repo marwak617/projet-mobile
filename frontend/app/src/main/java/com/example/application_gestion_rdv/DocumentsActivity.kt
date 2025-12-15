@@ -1,10 +1,15 @@
 package com.example.application_gestion_rdv
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Matrix
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.provider.MediaStore
 import android.provider.OpenableColumns
 import android.view.View
 import android.widget.AdapterView
@@ -14,6 +19,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.core.content.FileProvider
+import androidx.exifinterface.media.ExifInterface
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.application_gestion_rdv.adapters.DocumentsAdapter
@@ -34,6 +41,7 @@ class DocumentsActivity : AppCompatActivity() {
     private lateinit var adapter: DocumentsAdapter
     private var userId: Int = -1
     private var selectedFileUri: Uri? = null
+    private var capturedPhotoUri: Uri? = null
     private var selectedDocumentType: String = "mutuelle"
 
     private val documentTypes = listOf(
@@ -44,7 +52,7 @@ class DocumentsActivity : AppCompatActivity() {
         "autre" to "Autre"
     )
 
-    // Launcher pour sélectionner un fichier (simplifié - fonctionne avec tous les providers)
+    // Launcher pour sélectionner un fichier
     private val pickFileLauncher = registerForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -55,20 +63,44 @@ class DocumentsActivity : AppCompatActivity() {
         }
     }
 
-    // Launcher pour demander les permissions (Android 12 et inférieur)
-    private val requestPermissionLauncher = registerForActivityResult(
+    // Launcher pour prendre une photo
+    private val takePictureLauncher = registerForActivityResult(
+        ActivityResultContracts.TakePicture()
+    ) { success: Boolean ->
+        if (success) {
+            capturedPhotoUri?.let { uri ->
+                // Compresser et optimiser l'image
+                val optimizedFile = compressAndRotateImage(uri)
+                if (optimizedFile != null) {
+                    selectedFileUri = Uri.fromFile(optimizedFile)
+                    displaySelectedFile(selectedFileUri!!)
+                    binding.btnUpload.isEnabled = true
+                } else {
+                    Toast.makeText(this, "Erreur de traitement de l'image", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    // Launcher pour permission stockage
+    private val requestStoragePermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
         if (isGranted) {
             openFilePicker()
         } else {
-            Toast.makeText(
-                this,
-                "Permission refusée. Vous pouvez tout de même sélectionner des fichiers.",
-                Toast.LENGTH_LONG
-            ).show()
-            // Même sans permission, le file picker peut fonctionner
-            openFilePicker()
+            Toast.makeText(this, "Permission refusée", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    // Launcher pour permission caméra
+    private val requestCameraPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { isGranted: Boolean ->
+        if (isGranted) {
+            openCamera()
+        } else {
+            Toast.makeText(this, "Permission caméra refusée", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -113,7 +145,12 @@ class DocumentsActivity : AppCompatActivity() {
 
         // Bouton sélectionner fichier
         binding.btnSelectFile.setOnClickListener {
-            checkPermissionAndPickFile()
+            checkStoragePermissionAndPickFile()
+        }
+
+        // Bouton scanner document
+        binding.btnScanDocument.setOnClickListener {
+            checkCameraPermissionAndScan()
         }
 
         // Bouton upload
@@ -131,12 +168,10 @@ class DocumentsActivity : AppCompatActivity() {
         binding.recyclerViewDocuments.adapter = adapter
     }
 
-    private fun checkPermissionAndPickFile() {
-        // Android 13+ n'a plus besoin de READ_EXTERNAL_STORAGE
+    private fun checkStoragePermissionAndPickFile() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             openFilePicker()
         } else {
-            // Android 12 et inférieur
             when {
                 ContextCompat.checkSelfPermission(
                     this,
@@ -144,40 +179,147 @@ class DocumentsActivity : AppCompatActivity() {
                 ) == PackageManager.PERMISSION_GRANTED -> {
                     openFilePicker()
                 }
-                shouldShowRequestPermissionRationale(Manifest.permission.READ_EXTERNAL_STORAGE) -> {
-                    AlertDialog.Builder(this)
-                        .setTitle("Permission requise")
-                        .setMessage("Cette application a besoin d'accéder à vos fichiers pour les télécharger.")
-                        .setPositiveButton("OK") { _, _ ->
-                            requestPermissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
-                        }
-                        .setNegativeButton("Continuer sans permission") { _, _ ->
-                            openFilePicker()
-                        }
-                        .show()
-                }
                 else -> {
-                    requestPermissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
+                    requestStoragePermissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
                 }
             }
         }
     }
 
+    private fun checkCameraPermissionAndScan() {
+        when {
+            ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.CAMERA
+            ) == PackageManager.PERMISSION_GRANTED -> {
+                showScanOptions()
+            }
+            shouldShowRequestPermissionRationale(Manifest.permission.CAMERA) -> {
+                AlertDialog.Builder(this)
+                    .setTitle("Permission caméra")
+                    .setMessage("L'application a besoin d'accéder à la caméra pour scanner vos documents.")
+                    .setPositiveButton("OK") { _, _ ->
+                        requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                    }
+                    .setNegativeButton("Annuler", null)
+                    .show()
+            }
+            else -> {
+                requestCameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+            }
+        }
+    }
+
+    private fun showScanOptions() {
+        AlertDialog.Builder(this)
+            .setTitle("Scanner un document")
+            .setMessage("Prenez une photo claire de votre document avec un bon éclairage.")
+            .setPositiveButton("Prendre une photo") { _, _ ->
+                openCamera()
+            }
+            .setNegativeButton("Annuler", null)
+            .show()
+    }
+
     private fun openFilePicker() {
-        // Le file picker standard permet d'accéder à :
-        // - Fichiers locaux
-        // - Google Drive (si l'app Drive est installée)
-        // - Autres providers de contenu
         pickFileLauncher.launch("*/*")
+    }
+
+    private fun openCamera() {
+        try {
+            val photoFile = File.createTempFile(
+                "document_${System.currentTimeMillis()}",
+                ".jpg",
+                cacheDir
+            )
+
+            capturedPhotoUri = FileProvider.getUriForFile(
+                this,
+                "${packageName}.fileprovider",
+                photoFile
+            )
+
+            takePictureLauncher.launch(capturedPhotoUri)
+        } catch (e: Exception) {
+            Toast.makeText(this, "Erreur: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun compressAndRotateImage(uri: Uri): File? {
+        try {
+            val inputStream = contentResolver.openInputStream(uri)
+            val originalBitmap = BitmapFactory.decodeStream(inputStream)
+            inputStream?.close()
+
+            // Lire l'orientation EXIF
+            val exifInputStream = contentResolver.openInputStream(uri)
+            val exif = ExifInterface(exifInputStream!!)
+            exifInputStream.close()
+
+            val orientation = exif.getAttributeInt(
+                ExifInterface.TAG_ORIENTATION,
+                ExifInterface.ORIENTATION_NORMAL
+            )
+
+            // Rotation selon l'orientation
+            val rotatedBitmap = when (orientation) {
+                ExifInterface.ORIENTATION_ROTATE_90 -> rotateBitmap(originalBitmap, 90f)
+                ExifInterface.ORIENTATION_ROTATE_180 -> rotateBitmap(originalBitmap, 180f)
+                ExifInterface.ORIENTATION_ROTATE_270 -> rotateBitmap(originalBitmap, 270f)
+                else -> originalBitmap
+            }
+
+            // Compression (max 1920x1920, qualité 85%)
+            val maxSize = 1920
+            val scale = minOf(
+                maxSize.toFloat() / rotatedBitmap.width,
+                maxSize.toFloat() / rotatedBitmap.height,
+                1f
+            )
+
+            val scaledBitmap = if (scale < 1f) {
+                Bitmap.createScaledBitmap(
+                    rotatedBitmap,
+                    (rotatedBitmap.width * scale).toInt(),
+                    (rotatedBitmap.height * scale).toInt(),
+                    true
+                )
+            } else {
+                rotatedBitmap
+            }
+
+            // Sauvegarder
+            val outputFile = File(cacheDir, "compressed_${System.currentTimeMillis()}.jpg")
+            FileOutputStream(outputFile).use { out ->
+                scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 85, out)
+            }
+
+            // Libérer mémoire
+            if (rotatedBitmap != originalBitmap) rotatedBitmap.recycle()
+            if (scaledBitmap != rotatedBitmap) scaledBitmap.recycle()
+            originalBitmap.recycle()
+
+            return outputFile
+        } catch (e: Exception) {
+            e.printStackTrace()
+            return null
+        }
+    }
+
+    private fun rotateBitmap(bitmap: Bitmap, degrees: Float): Bitmap {
+        val matrix = Matrix()
+        matrix.postRotate(degrees)
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.width, bitmap.height, matrix, true)
     }
 
     private fun displaySelectedFile(uri: Uri) {
         val fileName = getFileName(uri)
-        binding.tvSelectedFile.text = "Fichier sélectionné : $fileName"
+        val fileSize = getFileSize(uri)
+        binding.tvSelectedFile.text = "📄 $fileName (${formatFileSize(fileSize)})"
     }
 
     private fun getFileName(uri: Uri): String {
-        var name = "fichier"
+        var name = "document_${System.currentTimeMillis()}.jpg"
         val cursor = contentResolver.query(uri, null, null, null, null)
         cursor?.use {
             if (it.moveToFirst()) {
@@ -190,23 +332,42 @@ class DocumentsActivity : AppCompatActivity() {
         return name
     }
 
+    private fun getFileSize(uri: Uri): Long {
+        var size = 0L
+        val cursor = contentResolver.query(uri, null, null, null, null)
+        cursor?.use {
+            if (it.moveToFirst()) {
+                val sizeIndex = it.getColumnIndex(OpenableColumns.SIZE)
+                if (sizeIndex != -1) {
+                    size = it.getLong(sizeIndex)
+                }
+            }
+        }
+        return size
+    }
+
+    private fun formatFileSize(bytes: Long): String {
+        return when {
+            bytes < 1024 -> "$bytes B"
+            bytes < 1024 * 1024 -> "${bytes / 1024} KB"
+            else -> "${bytes / (1024 * 1024)} MB"
+        }
+    }
+
     private fun uploadDocument() {
         val fileUri = selectedFileUri ?: return
 
         binding.progressBarUpload.visibility = View.VISIBLE
         binding.btnUpload.isEnabled = false
         binding.btnSelectFile.isEnabled = false
+        binding.btnScanDocument.isEnabled = false
 
         lifecycleScope.launch {
             try {
                 val inputStream = contentResolver.openInputStream(fileUri)
-                if (inputStream == null) {
-                    throw Exception("Impossible de lire le fichier")
-                }
-
                 val file = File(cacheDir, getFileName(fileUri))
 
-                inputStream.use { input ->
+                inputStream?.use { input ->
                     FileOutputStream(file).use { output ->
                         input.copyTo(output)
                     }
@@ -225,19 +386,22 @@ class DocumentsActivity : AppCompatActivity() {
                 binding.progressBarUpload.visibility = View.GONE
                 binding.btnUpload.isEnabled = true
                 binding.btnSelectFile.isEnabled = true
+                binding.btnScanDocument.isEnabled = true
 
                 if (response.isSuccessful && response.body()?.success == true) {
                     Toast.makeText(
                         this@DocumentsActivity,
-                        "Document téléchargé avec succès!",
+                        "✅ Document téléchargé avec succès!",
                         Toast.LENGTH_LONG
                     ).show()
 
                     selectedFileUri = null
+                    capturedPhotoUri = null
                     binding.tvSelectedFile.text = "Aucun fichier sélectionné"
                     binding.btnUpload.isEnabled = false
 
                     loadDocuments()
+                    file.delete()
                 } else {
                     Toast.makeText(
                         this@DocumentsActivity,
@@ -246,13 +410,11 @@ class DocumentsActivity : AppCompatActivity() {
                     ).show()
                 }
 
-                // Nettoyage du fichier temporaire
-                file.delete()
-
             } catch (e: Exception) {
                 binding.progressBarUpload.visibility = View.GONE
                 binding.btnUpload.isEnabled = true
                 binding.btnSelectFile.isEnabled = true
+                binding.btnScanDocument.isEnabled = true
 
                 Toast.makeText(
                     this@DocumentsActivity,

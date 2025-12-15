@@ -107,7 +107,8 @@ dependencies {
     // HTTP Transport (versions compatibles avec API Client 2.x)
     implementation("com.google.http-client:google-http-client-gson:1.43.3")
     implementation("com.google.http-client:google-http-client-android:1.43.3")
-
+    // ExifInterface pour rotation automatique des photos
+    implementation("androidx.exifinterface:exifinterface:1.3.6")
     // Tests
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
