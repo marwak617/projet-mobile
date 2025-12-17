@@ -76,6 +76,18 @@
         <activity
             android:name=".MyAppointmentsActivity"
             android:exported="false" />
+        <!-- NOUVELLES ACTIVITÉS MÉDECIN -->
+        <activity
+            android:name=".DoctorHomeActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".DoctorAppointmentsActivity"
+            android:exported="false" />
+
+        <activity
+            android:name=".DoctorPatientsActivity"
+            android:exported="false" />
     </application>
 
 </manifest>

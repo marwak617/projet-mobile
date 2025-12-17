@@ -35,9 +35,6 @@ class LoginActivity : AppCompatActivity() {
                 performLogin(email, password)
             }
         }
-        binding.tvGoToRegister.setOnClickListener {
-            startActivity(Intent(this, RegisterActivity::class.java))
-        }
     }
 
     private fun validateInput(email: String, password: String): Boolean {
@@ -93,25 +90,37 @@ class LoginActivity : AppCompatActivity() {
                         val user = body.user
                         Log.d("LOGIN", "👤 User name: ${user?.name}")
                         Log.d("LOGIN", "👤 User email: ${user?.email}")
+                        Log.d("LOGIN", "👤 User role: ${user?.role}")
 
                         Toast.makeText(
                             this@LoginActivity,
-                            "Bienvenue ${body.user?.name}!",
+                            "Bienvenue ${user?.name}!",
                             Toast.LENGTH_LONG
                         ).show()
 
-                        if (response.isSuccessful && response.body()?.success == true) {
-                            val body = response.body()!!
-
-                            val intent = Intent(this@LoginActivity, HomeActivity::class.java)
-                            intent.putExtra("USER_NAME", body.user?.name)
-                            intent.putExtra("USER_EMAIL", body.user?.email)
-                            intent.putExtra("USER_ID", body.user?.id)  // ← Ajoutez cette ligne
-                            intent.putExtra("TOKEN", body.token)
-                            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-                            startActivity(intent)
-                            finish()
+                        // Redirection selon le rôle
+                        val intent = if (user?.role == "doctor") {
+                            // Médecin → DoctorHomeActivity
+                            Intent(this@LoginActivity, DoctorHomeActivity::class.java).apply {
+                                putExtra("USER_NAME", user.name)
+                                putExtra("USER_EMAIL", user.email)
+                                putExtra("USER_ID", user.id)
+                                putExtra("USER_SPECIALTY", user.region) // Si vous avez specialty dans User
+                            }
+                        } else {
+                            // Patient → HomeActivity
+                            Intent(this@LoginActivity, HomeActivity::class.java).apply {
+                                putExtra("USER_NAME", user?.name)
+                                putExtra("USER_EMAIL", user?.email)
+                                putExtra("USER_ID", user?.id)
+                            }
                         }
+
+                        intent.putExtra("TOKEN", body.token)
+                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                        startActivity(intent)
+                        finish()
+
                     } else {
                         Log.e("LOGIN", "❌ SUCCESS = FALSE")
                         Log.e("LOGIN", "❌ Message d'erreur: ${body?.message}")

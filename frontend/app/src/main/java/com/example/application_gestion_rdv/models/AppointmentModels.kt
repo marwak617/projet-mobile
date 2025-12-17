@@ -9,10 +9,12 @@ data class AppointmentCreate(
 )
 
 // Rendez-vous
+
 data class Appointment(
     val id: Int,
     val patient_id: Int,
     val patient_name: String,
+    val patient_email: String?,  // ← AJOUTÉ
     val doctor_id: Int,
     val doctor_name: String,
     val doctor_specialty: String?,
