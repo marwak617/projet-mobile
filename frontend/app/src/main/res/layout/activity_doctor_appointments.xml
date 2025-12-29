@@ -12,7 +12,7 @@
         android:layout_height="wrap_content"
         app:cardCornerRadius="0dp"
         app:cardElevation="4dp"
-        android:backgroundTint="#4CAF50">
+        android:backgroundTint="#2196F3">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -62,7 +62,7 @@
                 android:layout_height="wrap_content"
                 android:text="Tous"
                 android:textSize="12sp"
-                android:backgroundTint="#4CAF50"
+                android:backgroundTint="#2196F3"
                 android:layout_marginEnd="8dp" />
 
             <Button
