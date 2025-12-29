@@ -35,6 +35,11 @@ class LoginActivity : AppCompatActivity() {
                 performLogin(email, password)
             }
         }
+        // Dans onCreate(), après le setOnClickListener du btnLogin
+        binding.tvGoToRegister.setOnClickListener {
+            Log.d("LOGIN", "➡️ Navigation vers RegisterActivity")
+            startActivity(Intent(this, RegisterActivity::class.java))
+        }
     }
 
     private fun validateInput(email: String, password: String): Boolean {

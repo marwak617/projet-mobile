@@ -1,3 +1,17 @@
 <resources>
     <string name="app_name">Application_gestion_RDV</string>
+    <!-- Chat strings -->
+    <string name="attach_file">Joindre fichier</string>
+    <string name="send">Envoyer</string>
+    <string name="type_message">Tapez votre message…</string>
+    <string name="send_file">Envoyer un fichier</string>
+    <string name="image">Image</string>
+    <string name="gallery">Galerie d\'images</string>
+    <string name="document">Document</string>
+    <string name="document_pdf_word">Document (PDF, Word, Excel)</string>
+    <string name="camera">Caméra</string>
+    <string name="take_photo">Prendre une photo</string>
+    <string name="close">Fermer</string>
+
+
 </resources>

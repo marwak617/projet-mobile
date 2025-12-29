@@ -109,6 +109,33 @@ dependencies {
     implementation("com.google.http-client:google-http-client-android:1.43.3")
     // ExifInterface pour rotation automatique des photos
     implementation("androidx.exifinterface:exifinterface:1.3.6")
+
+    // WebSocket
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+
+    // Retrofit pour REST API
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+
+    // Coroutines
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+
+
+    // RecyclerView
+    implementation("androidx.recyclerview:recyclerview:1.3.2")
+
+    // Image loading
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+
+    // Image loading and caching
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+    annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
+
+    // Image zoom
+    implementation("com.github.chrisbanes:PhotoView:2.3.0")
+
+    // File compression (optional)
+    implementation("id.zelory:compressor:3.0.1")
     // Tests
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

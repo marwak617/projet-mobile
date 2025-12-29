@@ -64,3 +64,55 @@ class DocumentResponse(BaseModel):
     type: Optional[str]
     class Config:
         orm_mode = True
+
+class MessageBase(BaseModel):
+    content: str
+    message_type: str = "text"
+    file_url: Optional[str] = None
+
+class MessageCreate(MessageBase):
+    conversation_id: int
+
+class MessageResponse(MessageBase):
+    id: int
+    conversation_id: int
+    sender_id: int
+    is_read: bool
+    created_at: datetime
+    sender_name: Optional[str] = None
+    
+    class Config:
+        from_attributes = True
+
+class ConversationBase(BaseModel):
+    patient_id: int
+    medecin_id: int
+
+class ConversationCreate(ConversationBase):
+    pass
+
+class ConversationResponse(ConversationBase):
+    id: int
+    created_at: datetime
+    last_message_at: Optional[datetime]
+    patient_name: str
+    medecin_name: str
+    last_message: Optional[str]
+    last_message_type: Optional[str]
+    unread_count: int = 0
+    
+    class Config:
+        from_attributes = True
+
+class ChatAttachmentResponse(BaseModel):
+    id: int
+    message_id: int
+    file_name: str
+    file_type: str
+    file_size: Optional[int]
+    file_path: str
+    thumbnail_path: Optional[str]
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True

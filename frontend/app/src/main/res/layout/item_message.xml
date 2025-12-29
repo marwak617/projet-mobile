@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="4dp">
+
+    <!-- Message reçu -->
+    <LinearLayout
+        android:id="@+id/layoutReceived"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="start"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/textMessageReceived"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@color/messageReceived"
+            android:padding="12dp"
+            android:textColor="@color/messageTextReceived"
+            android:maxWidth="280dp"
+            android:visibility="gone"/>
+
+        <ImageView
+            android:id="@+id/imageReceived"
+            android:layout_width="250dp"
+            android:layout_height="250dp"
+            android:scaleType="centerCrop"
+            android:visibility="gone"
+            android:contentDescription="@string/image"/>
+
+        <LinearLayout
+            android:id="@+id/documentReceived"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@color/messageReceived"
+            android:orientation="horizontal"
+            android:padding="12dp"
+            android:maxWidth="280dp"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@android:drawable/ic_menu_info_details"
+                android:contentDescription="@string/document"/>
+
+            <TextView
+                android:id="@+id/documentNameReceived"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="12dp"
+                android:text="Document.pdf"
+                android:textStyle="bold"
+                android:maxLines="2"
+                android:ellipsize="end"/>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/textTimeReceived"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="11sp"
+            android:textColor="#999999"
+            android:layout_marginStart="8dp"
+            android:layout_marginTop="2dp"/>
+    </LinearLayout>
+
+    <!-- Message envoyé -->
+    <LinearLayout
+        android:id="@+id/layoutSent"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/textMessageSent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@color/messageSent"
+            android:padding="12dp"
+            android:textColor="@color/messageTextSent"
+            android:maxWidth="280dp"
+            android:visibility="gone"/>
+
+        <ImageView
+            android:id="@+id/imageSent"
+            android:layout_width="250dp"
+            android:layout_height="250dp"
+            android:scaleType="centerCrop"
+            android:visibility="gone"
+            android:contentDescription="@string/image"/>
+
+        <LinearLayout
+            android:id="@+id/documentSent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@color/messageSent"
+            android:orientation="horizontal"
+            android:padding="12dp"
+            android:maxWidth="280dp"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:src="@android:drawable/ic_menu_info_details"
+                android:contentDescription="@string/document"/>
+
+            <TextView
+                android:id="@+id/documentNameSent"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:layout_marginStart="12dp"
+                android:text="Document.pdf"
+                android:textStyle="bold"
+                android:textColor="@color/messageTextSent"
+                android:maxLines="2"
+                android:ellipsize="end"/>
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/textTimeSent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="11sp"
+            android:textColor="#999999"
+            android:layout_gravity="end"
+            android:layout_marginEnd="8dp"
+            android:layout_marginTop="2dp"/>
+    </LinearLayout>
+
+</FrameLayout>

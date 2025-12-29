@@ -55,11 +55,38 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun setupClickListeners() {
-        // Action: Prendre un RDV
+        // Action: Prendre un RDV (via liste des médecins)
         binding.cardBookAppointment.setOnClickListener {
-            Toast.makeText(this, "Fonctionnalité à venir : Prendre un RDV", Toast.LENGTH_SHORT).show()
-            // TODO: Naviguer vers BookAppointmentActivity
-            // startActivity(Intent(this, BookAppointmentActivity::class.java))
+            val intent = Intent(this, DoctorsListActivity::class.java)
+            intent.putExtra("PATIENT_ID", userId)
+            startActivity(intent)
+        }
+
+        // Action: Mes rendez-vous
+        binding.cardMyAppointments.setOnClickListener {
+            val intent = Intent(this, MyAppointmentsActivity::class.java)
+            intent.putExtra("USER_ID", userId)
+            startActivity(intent)
+        }
+
+        // Action: Trouver un médecin
+        binding.cardFindDoctor.setOnClickListener {
+            val intent = Intent(this, DoctorsListActivity::class.java)
+            intent.putExtra("PATIENT_ID", userId)
+            startActivity(intent)
+        }
+
+        // Action: Chat - NOUVEAU
+        binding.cardChat.setOnClickListener {
+            // Accès direct au chat de test (conversation_id = 1)
+            val intent = Intent(this, ChatActivity::class.java)
+            intent.putExtra("conversation_id", 1)
+            intent.putExtra("USER_ID", 12)
+            startActivity(intent)
+
+            // OU si vous voulez afficher la liste des conversations:
+            // val intent = Intent(this, ConversationListActivity::class.java)
+            // startActivity(intent)
         }
 
         // Action: Mon profil
@@ -83,27 +110,6 @@ class HomeActivity : AppCompatActivity() {
         // Action: Photo de profil
         binding.ivProfile.setOnClickListener {
             Toast.makeText(this, "Fonctionnalité à venir : Modifier la photo", Toast.LENGTH_SHORT).show()
-        }
-
-        // Action: Prendre un RDV (via liste des médecins)
-        binding.cardBookAppointment.setOnClickListener {
-            val intent = Intent(this, DoctorsListActivity::class.java)
-            intent.putExtra("PATIENT_ID", userId)
-            startActivity(intent)
-        }
-
-        // Action: Mes rendez-vous
-        binding.cardMyAppointments.setOnClickListener {
-            val intent = Intent(this, MyAppointmentsActivity::class.java)
-            intent.putExtra("USER_ID", userId)
-            startActivity(intent)
-        }
-
-        // Action: Trouver un médecin
-        binding.cardFindDoctor.setOnClickListener {
-            val intent = Intent(this, DoctorsListActivity::class.java)
-            intent.putExtra("PATIENT_ID", userId)
-            startActivity(intent)
         }
     }
 
