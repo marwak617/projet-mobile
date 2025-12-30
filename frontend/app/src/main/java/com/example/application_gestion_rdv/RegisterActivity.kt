@@ -6,6 +6,8 @@ import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import android.widget.RadioButton
+import android.widget.RadioGroup
 import androidx.lifecycle.lifecycleScope
 import com.example.application_gestion_rdv.api.RetrofitClient
 import com.example.application_gestion_rdv.databinding.ActivityRegisterBinding
@@ -30,10 +32,18 @@ class RegisterActivity : AppCompatActivity() {
             val password = binding.etPassword.text.toString().trim()
             val region = binding.etRegion.text.toString().trim()
 
-            Log.d("REGISTER", "🔘 Bouton cliqué - Name: $name, Email: $email, Region: $region")
+            // Récupération du rôle sélectionné
+            val selectedRole = when (binding.rgRole.checkedRadioButtonId) {
+                R.id.rbPatient -> "PATIENT"
+                R.id.rbMedecin -> "MEDECIN"
+                else -> "PATIENT"
+            }
+
+            Log.d("REGISTER", "🔘 Bouton cliqué - Name: $name, Email: $email, Region: $region, Role: $selectedRole")
 
             if (validateInput(name, email, password)) {
-                performRegister(name, email, password, region.ifEmpty { null })
+                // Passer selectedRole à la fonction performRegister
+                performRegister(name, email, password, region.ifEmpty { null }, selectedRole)
             }
         }
 
@@ -73,7 +83,8 @@ class RegisterActivity : AppCompatActivity() {
         return true
     }
 
-    private fun performRegister(name: String, email: String, password: String, region: String?) {
+    // Ajouter le paramètre role
+    private fun performRegister(name: String, email: String, password: String, region: String?, role: String) {
         binding.progressBar.visibility = View.VISIBLE
         binding.btnRegister.isEnabled = false
 
@@ -81,6 +92,7 @@ class RegisterActivity : AppCompatActivity() {
         Log.d("REGISTER", "📤 Name: $name")
         Log.d("REGISTER", "📤 Email: $email")
         Log.d("REGISTER", "📤 Region: $region")
+        Log.d("REGISTER", "📤 Role: $role")
         Log.d("REGISTER", "📤 URL complète: ${RetrofitClient.BASE_URL}users/register")
 
         lifecycleScope.launch {
@@ -88,7 +100,7 @@ class RegisterActivity : AppCompatActivity() {
                 Log.d("REGISTER", "⏳ Envoi de la requête...")
 
                 val response = RetrofitClient.apiService.register(
-                    RegisterRequest(name, email, password, region)
+                    RegisterRequest(name, email, password, region, role)
                 )
 
                 Log.d("REGISTER", "📥 Réponse reçue!")
