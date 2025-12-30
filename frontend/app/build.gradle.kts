@@ -129,6 +129,7 @@ dependencies {
 
     // Image loading and caching
     implementation("com.github.bumptech.glide:glide:4.16.0")
+    implementation(libs.androidx.material3)
     annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
 
     // Image zoom

@@ -71,6 +71,39 @@
         android:background="@android:drawable/edit_text"
         android:layout_marginBottom="24dp" />
 
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:text="Type de compte"
+        android:textColor="#2C3E50"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:gravity="start" />
+
+    <RadioGroup
+        android:id="@+id/rgRole"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="24dp">
+
+        <RadioButton
+            android:id="@+id/rbPatient"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Patient"
+            android:checked="true"
+            android:layout_marginEnd="32dp"/>
+
+        <RadioButton
+            android:id="@+id/rbMedecin"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Médecin"/>
+    </RadioGroup>
+
+
     <ProgressBar
         android:id="@+id/progressBar"
         style="?android:attr/progressBarStyle"
@@ -83,19 +116,19 @@
         android:id="@+id/btnRegister"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="S'inscrire"
         android:backgroundTint="#1976D2"
-        android:textColor="#FFFFFF"
-        android:padding="12dp" />
+        android:padding="10dp"
+        android:text="S'inscrire"
+        android:textColor="#FFFFFF" />
 
     <TextView
         android:id="@+id/tvGoToLogin"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Déjà un compte ? Se connecter"
-        android:textColor="@android:color/holo_blue_dark"
         android:layout_marginTop="16dp"
         android:clickable="true"
-        android:focusable="true" />
+        android:focusable="true"
+        android:text="Déjà un compte ? Se connecter"
+        android:textColor="@android:color/holo_blue_dark" />
 
 </LinearLayout>
