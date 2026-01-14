@@ -93,14 +93,14 @@ L’application est toujours en phase d’amélioration. Parmi les fonctionnalit
 ## 📚 Contexte académique
 - Établissement : **ENSA de Berrechid**
 - Module : **Applications Mobiles**
-- Année : 2024–2025
+- Année : 2025–2026
 - Type : Projet académique
 
 ---
 
 ## 🤝 Réalisé par
 - **Marwa Kharbichi**
-- **Ikram Essadiq**
+
 
 ---
 
@@ -110,5 +110,5 @@ Ce projet est à vocation pédagogique. Toute suggestion ou contribution est la 
 ---
 
 ## 📬 Contact
-N’hésitez pas à nous contacter pour toute question, suggestion ou collaboration.
+N’hésitez pas à me contacter pour toute question, suggestion ou collaboration.
 
