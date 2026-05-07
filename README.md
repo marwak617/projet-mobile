@@ -100,6 +100,7 @@ L’application est toujours en phase d’amélioration. Parmi les fonctionnalit
 
 ## 🤝 Réalisé par
 - **Marwa Kharbichi**
+- **Ikram Essadiq**
 
 
 ---
